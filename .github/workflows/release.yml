@@ -1,0 +1,35 @@
+name: Build and Release version
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: LinAlg.tex
+
+      - name: Create ZIP archive from manifest
+        run: |
+          grep -E -v '^[[:space:]]*(#|$)' archive-list.txt | xargs -d '\n' zip LinAlg.zip
+
+      - name: Create or Update Rolling Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Cheat Sheet Build
+          body: |
+            Automatically compiled and updated from the latest commit: `${{ github.sha }}`.
+          files: |
+            LinAlg.zip
